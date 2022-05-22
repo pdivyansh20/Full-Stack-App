@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const router = express.Router();
 require(`../db/conn`)
+const authenticate =require("../middleware/authenticate")
 const User = require("../model/userSchema")
 router.get("/", function (req, res) {
     res.send("home coming")
@@ -29,7 +30,7 @@ router.post('/sigin', async function (req, res) {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.json({ error: "please fill the field" })
+        return res.status(400).json({ error: "please fill the field" })
     }
     const userLogin = await User.findOne({ email: email })
     if (userLogin) {
@@ -41,16 +42,25 @@ router.post('/sigin', async function (req, res) {
             httpOnly: true
         })
         if (!isMatch) {
-            res.json({ message: "user error" })
+            res.status(400).json({ message: "user error" })
         }
         else {
             res.json({ message: "User  sigin succes" })
         }
     }
     else {
-        res.json({ message: "User error" })
+        res.status(400).json({ message: "User error" })
     }
 
+})
+
+router.get("/about",authenticate, function(req,res){
+    res.send(req.rootUser);
+  
+})
+router.get("/Logout", function(req,res){
+    res.clearCookie('jwtoken',{path:"/"})
+    res.status(200).send("logout");
 })
 
 module.exports = router 
